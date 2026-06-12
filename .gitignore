@@ -1,0 +1,20 @@
+# --- 1. PlatformIO Build & Dependency Artifacts ---
+**/.pio/
+**/.pioenvs/
+**/.piolibdeps/
+**/ext-data/
+
+# --- 2. IDE Workspace & Local Configuration Caches ---
+**/.vscode/
+**/.vscdb/
+*.code-workspace
+
+# --- 3. Compiled Binary Outputs ---
+*.o
+*.d
+*.elf
+*.bin
+
+# --- 4. Operating System Junk ---
+.DS_Store
+Thumbs.db
