@@ -3,7 +3,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <U8g2lib.h>
-#include <Edge-AI-Jamming-Detection_inferencing.h>
+#include <Edge-AI.h>
 
 // --- HELTEC V4 PINS ---
 #define NSS 8
@@ -20,13 +20,15 @@
 
 // --- DEBOUNCING LOGIC (2-SECOND ROLLING WINDOW) ---
 #define RECENT_WINDOW_SIZE 100 // 2 seconds of memory at 50Hz (20ms intervals)
+#define WARNING_TRIGGER_COUNT 25 // LEVEL 1: 0.5s of attacks triggers a temporary Warning
 #define ALARM_TRIGGER_COUNT 35 // Trigger alarm if 35% or more of the window contains attacks
 #define ALARM_CLEAR_COUNT 20   // Clear alarm only when attack density drops below 20%
 bool has_been_attacked_once = false; // Persistent memory latch
+bool has_heard_interference_once = false; // <-- NEW: Tracks historical Level 1 warnings
 uint8_t recent_frames[RECENT_WINDOW_SIZE] = {0}; // Circular buffer tracking frame states (1=Attack, 0=Clear)
 int window_index = 0;
 int total_attack_frames_in_window = 0; // Tracks live density inside the 2-second window
-
+bool is_warning_state = false;   // NEW: Tracks if we are in a low-level warning state
 bool is_under_attack = false;
 String current_attack_name = "";
 float last_total_prob = 0.0;
@@ -44,7 +46,8 @@ float getLinearSquelch(float noise) {
     return squelch;
 }
 #define RSSI_SQUELCH -72
-
+unsigned long last_attack_frame_time = 0; // Tracks the exact millisecond an attack pulse was last seen
+#define ALARM_HOLD_DURATION 1500          // Hold the alert on screen for 1500ms (1.5s) to smooth out pulsing
 // --- MODES ---
 int operationMode = 0; 
 
@@ -208,12 +211,13 @@ void loop() {
            // 4. Determine Status of the Current Frame
             bool is_attack_frame = false;
 
-            if (current_rssi < dynamic_squelch) {
+           if (current_rssi < dynamic_squelch) {
                 // SQUELCH ACTIVE: Air is quiet.
                 total_attack_prob = 0.0; 
             } else if (total_attack_prob >= CONFIDENCE_THRESHOLD) {
                 // ATTACK VECTOR DETECTED IN THIS SPECIFIC 20MS WINDOW
                 is_attack_frame = true;
+                last_attack_frame_time = millis(); // <-- NEW: Lock in the time we saw this pulse!
             }
 
 // 5. Sliding Circular Window Math
@@ -229,26 +233,49 @@ void loop() {
             // D. Roll the pointer forward (wraps around to 0 when it reaches 100)
             window_index = (window_index + 1) % RECENT_WINDOW_SIZE;
 
-            // E. Density Threshold Evaluation
+// E. Tiered Density Threshold Evaluation
             if (total_attack_frames_in_window >= ALARM_TRIGGER_COUNT) {
-                // The threshold has been crossed over the last 2 seconds
+                // CRITICAL ALARM: Sustained attack (Over 1 second)
                 is_under_attack = true;
-                has_been_attacked_once = true; // <-- Latch flips TRUE permanently on the very first hit
+                is_warning_state = false;
+                has_been_attacked_once = true; // <-- Latch ONLY flips TRUE on Level 2 attacks
+                
                 current_attack_name = highest_attack_label;
                 last_total_prob = total_attack_prob;
                 last_specific_prob = max_specific_attack_prob;
+                
+            } else if (total_attack_frames_in_window >= WARNING_TRIGGER_COUNT) {
+                // LOW WARNING: Brief collision or weak interference (Over 0.5 seconds)
+                if (!is_under_attack) { 
+                    is_warning_state = true;
+                    has_heard_interference_once = true; // <-- NEW: Drops the breadcrumb
+                    current_attack_name = highest_attack_label;
+                    last_total_prob = total_attack_prob;
+                }
+                
             } else if (total_attack_frames_in_window <= ALARM_CLEAR_COUNT) {
-                // The environment has returned to a sustained clean state
+                
+            } else if (total_attack_frames_in_window <= ALARM_CLEAR_COUNT) {
+                // CLEAR: The environment has returned to a sustained clean state
                 is_under_attack = false;
+                is_warning_state = false;
             }
 
             // 6. Update OLED 
             if (millis() - lastDisplayTime >= 200) {
                 lastDisplayTime = millis();
-                
                 u8g2.clearBuffer();
                 
+                // --- SMOOTHING HYSTERESIS CHECK ---
+                // Only allow the UI to drop down to the clear screen if the air has been
+                // perfectly quiet for longer than our hold duration (1.5 seconds).
+                if (millis() - last_attack_frame_time >= ALARM_HOLD_DURATION) {
+                    is_under_attack = false;
+                    is_warning_state = false;
+                }
+                
                 if (is_under_attack) {
+                    // --- LEVEL 2: CRITICAL ALARM UI (INVERTED SCREEN) ---
                     u8g2.setDrawColor(1);
                     u8g2.drawBox(0, 0, 128, 64);
                     u8g2.setDrawColor(0); 
@@ -259,42 +286,44 @@ void loop() {
                     
                     u8g2.setFont(u8g2_font_6x10_tr);
                     u8g2.setCursor(5, 30);
-                    u8g2.print("Type: ");
-                    u8g2.print(current_attack_name);
-                    
+                    u8g2.print("Type: "); u8g2.print(current_attack_name);
                     u8g2.setCursor(5, 45);
-                    u8g2.print("Tot Conf: ");
-                    u8g2.print(last_total_prob * 100, 0);
-                    u8g2.print("%");
-
-                    u8g2.setCursor(5, 60);
-                    u8g2.print("Sub Conf: ");
-                    u8g2.print(last_specific_prob * 100, 0);
-                    u8g2.print("%");
-                    
+                    u8g2.print("Conf: "); u8g2.print(last_total_prob * 100, 0); u8g2.print("%");
                     u8g2.setDrawColor(1); 
+                    
+                } else if (is_warning_state) {
+                    // --- LEVEL 1: LOW WARNING UI (STANDARD SCREEN) ---
+                    u8g2.setFont(u8g2_font_helvB10_tr);
+                    u8g2.setCursor(0, 15);
+                    u8g2.print("? Interference");
+                    
+                    u8g2.setFont(u8g2_font_6x10_tr);
+                    u8g2.setCursor(0, 30);
+                    u8g2.print("Profile: "); u8g2.print(current_attack_name);
+                    u8g2.setCursor(0, 45);
+                    u8g2.print("Tracking...");
                 } else {
+                    // --- LEVEL 0: CLEAR UI ---
                     u8g2.setFont(u8g2_font_helvB10_tr);
                     u8g2.setCursor(0, 20);
                     u8g2.print("Status: Clear");
                     
-                    // Permanent historical warning flag
+                    // Tiered Historical Warning Flags
                     if (has_been_attacked_once) {
                         u8g2.setCursor(110, 20); 
                         u8g2.print("[!]"); 
+                    } else if (has_heard_interference_once) {
+                        u8g2.setCursor(110, 20); 
+                        u8g2.print("[?]"); 
                     }
                     
                     u8g2.setFont(u8g2_font_6x10_tr);
                     u8g2.setCursor(0, 38);
                     u8g2.print("Listening...");
                     
-                    // --- UPDATED ROW: DISPLAY CURRENT RSSI & DYNAMIC SQUELCH SIDE-BY-SIDE ---
                     u8g2.setCursor(0, 52);
-                    u8g2.print("RSSI: ");
-                    u8g2.print(current_rssi, 0);
-                    u8g2.print("  Sq: ");
-                    u8g2.print(dynamic_squelch, 0);
-                    // ------------------------------------------------------------------------
+                    u8g2.print("RSSI: "); u8g2.print(current_rssi, 0);
+                    u8g2.print("  Sq: "); u8g2.print(dynamic_squelch, 0);
                     
                     if (current_rssi < dynamic_squelch) {
                         u8g2.setCursor(0, 64);
