@@ -35,11 +35,10 @@ float last_total_prob = 0.0;
 float last_specific_prob = 0.0;
 float tracking_noise_floor = -85.0; // Starts at a safe baseline default
 float getLinearSquelch(float noise) {
-    // 1. Calculate the exact linear curve dialed in from your live testing
-    // y = (5/6) * x - 11.3333
-    float squelch = (5.0 / 6.0) * noise - 11.3333;
+    //  dialed in from live testing
+    float squelch = (5.0 / 6.0) * noise - 10.5;
     
-    // 2. Enforce absolute physical constraints (-90 to -70)
+    //  Enforce absolute physical constraints (-90 to -70)
     if (squelch < -90.0) squelch = -90.0;
     if (squelch > -70.0) squelch = -70.0;
     
