@@ -133,7 +133,7 @@ void loop() {
   }
   else if (currentMode == 3) {
     modeName = "3: GARAGE KEYFOB";
-    txInterval = 12000; 
+    txInterval = 20000; 
     if (millis() - lastTxTime >= txInterval || lastTxTime == 0) {
         rollingCode += random(1, 5); 
     }
@@ -141,7 +141,7 @@ void loop() {
   }
   else if (currentMode == 4) {
     modeName = "4: SMART METER";
-    txInterval = 8000; 
+    txInterval = 25000; 
     if (millis() - lastTxTime >= txInterval || lastTxTime == 0) {
         kwhReading += 0.02; 
     }
