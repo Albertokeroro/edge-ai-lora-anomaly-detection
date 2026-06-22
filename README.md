@@ -4,22 +4,28 @@
 ![Framework](https://img.shields.io/badge/Framework-Arduino/C++-green.svg)
 ![Hardware](https://img.shields.io/badge/Hardware-Heltec%20V4%20|%20SX1262-orange.svg)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-yellow.svg)
+[![Web Flasher](https://img.shields.io/badge/Web%20Flasher-Install%20via%20Browser-brightgreen?logo=googlechrome&logoColor=white)](https://albertokeroro.github.io/edge-ml-anomaly-detector-flasher/)
 
 An advanced, edge-computing firmware designed to safeguard decentralized sub-GHz mesh communication networks (such as Meshtastic) against malicious physical-layer RF manipulation. 
 
 This project implements a lightweight Machine Learning classification pipeline built for constraints-restricted microcontrollers used to detect, identify, and alert on active radio frequency interference profiles in real-time.
 
----
+
+## 🚀 Browser-Based Deployment
+
+Pre-compiled production binaries can be flashed directly to the target hardware via a web browser without the need to compile.
+
+* **Direct Installation:** Access the interface at the **[Web Flasher Utility](https://albertokeroro.github.io/edge-ml-anomaly-detector-flasher/)**.
+
 
 ## Highlights
 
 * **Ultra-Low Memory Footprint Anomaly Inference:** Runs real-time local spectral analysis in a fast **1ms inference time** utilizing only **1.4KB of peak RAM**, leaving maximum resources open for host network stacks.
 * **AGC-Resilient Adaptive Tracking Squelch:** Features a mathematical tracking engine that filters out SX1262's AGC's abrupt gain gear-shifts to prevent false-positive alarms while maintaining max sensitivity.
 * **Multi-Profile RF Threat Simulation:** Includes isolated validation utilities mirroring real-world attack vectors (Continuous Wave, Symmetric/Asymmetric Pulsed, Packet Floods, and Preamble-Stun sequences).
-* **Dual-Mode Visual Firmware UI:** edge ML jamming detection screen with a a persistent historical alarm latch and and automatic dynamic threshold and a realtime rrsi graph.
+* **Dual-Mode Visual Firmware UI:** Features a dedicated Edge ML jamming detection display, complete with a persistent historical alarm latch, automatic dynamic thresholding, and a real-time RSSI graph.
 
----
 
-##  Repository Architecture
+## Repository Architecture
 
 This project is structured as an intentional, modular monorepo. Each sub-project isolates its compiler tasks to allow seamless development in PlatformIO without dependency bleeding.
