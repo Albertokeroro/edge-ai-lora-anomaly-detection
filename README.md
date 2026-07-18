@@ -11,7 +11,7 @@ An advanced, edge-computing firmware designed to safeguard decentralized sub-GHz
 
 This project implements a lightweight Machine Learning classification pipeline built for constraints-restricted microcontrollers used to detect, identify, and alert on active radio frequency interference profiles in real-time.
 
- **Showcase & Extra Documentation:** **[Analysis & Demo](https://jalbertomoro.netlify.app/?project=rf-detector)**
+**[Showcase & Extra Documentation](https://jalbertomoro.netlify.app/?project=rf-detector)**
 
 ## 🚀 Browser-Based Deployment
 
