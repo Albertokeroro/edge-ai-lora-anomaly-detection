@@ -1,18 +1,8 @@
 # Edge AI LoRa Anomaly Detection
 
-<p align="center">
-  <img src="https://img.shields.io/badge/PlatformIO-Supported-blue.svg" alt="PlatformIO" />
-  <img src="https://img.shields.io/badge/Framework-Arduino/C++-green.svg" alt="Framework" />
-  <img src="https://img.shields.io/badge/Hardware-Heltec%20V4%20|%20SX1262-orange.svg" alt="Hardware" />
-  <img src="https://img.shields.io/badge/Status-Active%20Development-yellow.svg" alt="Status" />
-  <br />
-  <a href="https://albertokeroro.github.io/edge-ml-anomaly-detector-flasher/">
-    <img src="https://img.shields.io/badge/Web%20Flasher-Install%20via%20Browser-brightgreen?logo=googlechrome&logoColor=white" alt="Web Flasher" />
-  </a>
-  <a href="https://studio.edgeimpulse.com/public/900708/latest">
-    <img src="https://img.shields.io/badge/Edge%20Impulse-Model%20%26%20Dataset-blueviolet" alt="Edge Impulse" />
-  </a>
-</p>
+![PlatformIO](https://img.shields.io/badge/PlatformIO-Supported-blue.svg) ![Framework](https://img.shields.io/badge/Framework-Arduino/C++-green.svg) ![Hardware](https://img.shields.io/badge/Hardware-Heltec%20V4%20|%20SX1262-orange.svg) ![Status](https://img.shields.io/badge/Status-Active%20Development-yellow.svg)
+
+[![Web Flasher](https://img.shields.io/badge/Web%20Flasher-Install%20via%20Browser-brightgreen?logo=googlechrome&logoColor=white)](https://albertokeroro.github.io/edge-ml-anomaly-detector-flasher/) [![Edge Impulse](https://img.shields.io/badge/Edge%20Impulse-Model%20%26%20Dataset-blueviolet)](https://studio.edgeimpulse.com/public/900708/latest)
 
 An advanced, edge-computing firmware designed to safeguard decentralized sub-GHz mesh communication networks (such as Meshtastic) against malicious physical-layer RF manipulation. 
 
